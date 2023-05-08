@@ -20,3 +20,11 @@ internal inline fun UiLoadingState.toCombined() = CombinedUiLoadingState(
     refresh = this,
     remote = UiLoadingState.NotLoading,
 )
+
+fun <T> CombinedUiLoadingState.toUiState(): UiState<T> = refresh.toUiState()
+
+fun <T> UiLoadingState.toUiState(): UiState<T> = when (this) {
+    UiLoadingState.NotLoading -> error { "UiLoadingState.NotLoading can't bind to state" }
+    UiLoadingState.Loading -> UiState.loading()
+    is UiLoadingState.Error -> UiState.failure(error)
+}
