@@ -1,4 +1,4 @@
-package com.myapplication
+package com.seiko.uistate.demo
 
 import MainView
 import android.os.Bundle

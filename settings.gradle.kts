@@ -1,4 +1,4 @@
-rootProject.name = "MyApplication"
+rootProject.name = "compose-uistate"
 
 include(":androidApp")
 include(":shared")
@@ -27,6 +27,7 @@ pluginManagement {
     }
 }
 
+@Suppress("UnstableApiUsage")
 dependencyResolutionManagement {
     repositories {
         google()
