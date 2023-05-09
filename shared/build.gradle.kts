@@ -33,15 +33,14 @@ kotlin {
                 implementation(compose.material)
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 implementation(compose.components.resources)
+                implementation(projects.uistate)
+                api("moe.tlaster:precompose:1.4.1")
+                api("moe.tlaster:precompose-viewmodel:1.4.1")
+                api("moe.tlaster:precompose-molecule:1.4.1")
+                implementation("app.cash.molecule:molecule-runtime:0.9.0")
             }
         }
-        val androidMain by getting {
-            dependencies {
-                api("androidx.activity:activity-compose:1.6.1")
-                api("androidx.appcompat:appcompat:1.6.1")
-                api("androidx.core:core-ktx:1.9.0")
-            }
-        }
+        val androidMain by getting
         val iosX64Main by getting
         val iosArm64Main by getting
         val iosSimulatorArm64Main by getting

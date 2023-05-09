@@ -13,7 +13,8 @@ kotlin {
     macosX64()
     macosArm64()
     js(IR) {
-        useCommonJs()
+        browser()
+        nodejs()
     }
     sourceSets {
         commonMain {
