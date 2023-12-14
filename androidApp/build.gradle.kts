@@ -10,8 +10,7 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 implementation(projects.shared)
-                implementation("androidx.appcompat:appcompat:1.6.1")
-                implementation("androidx.activity:activity-compose:1.7.1")
+                implementation("androidx.activity:activity-compose:1.8.2")
             }
         }
     }
@@ -31,10 +30,10 @@ android {
         versionName = "1.0"
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlin {
-        jvmToolchain(11)
+        jvmToolchain(17)
     }
 }

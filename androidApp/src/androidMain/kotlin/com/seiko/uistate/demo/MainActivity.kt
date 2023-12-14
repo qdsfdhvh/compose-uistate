@@ -2,10 +2,10 @@ package com.seiko.uistate.demo
 
 import MainView
 import android.os.Bundle
-import moe.tlaster.precompose.lifecycle.PreComposeActivity
-import moe.tlaster.precompose.lifecycle.setContent
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 
-class MainActivity : PreComposeActivity() {
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {

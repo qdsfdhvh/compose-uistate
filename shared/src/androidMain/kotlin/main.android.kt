@@ -1,3 +1,8 @@
 import androidx.compose.runtime.Composable
+import moe.tlaster.precompose.PreComposeApp
 
-@Composable fun MainView() = App()
+@Composable fun MainView() {
+    PreComposeApp {
+        App()
+    }
+}
