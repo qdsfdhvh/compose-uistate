@@ -1,95 +1,113 @@
 package com.seiko.uistate
 
-import androidx.compose.runtime.Immutable
+import kotlin.jvm.JvmField
+import kotlin.jvm.JvmInline
 
-@Immutable
-data class UiState<out T>(
-    val loadingState: CombinedUiLoadingState,
-    val data: T?,
+@JvmInline
+value class UiState<out T> internal constructor(
+    internal val data: Any?,
 ) {
     val isLoading: Boolean
-        get() = loadingState.refresh === UiLoadingState.Loading
-                || loadingState.refresh === UiLoadingState.Loading
+        get() = data is Loading
 
     val isFailure: Boolean
-        get() = loadingState.refresh is UiLoadingState.Error && data == null
+        get() = data is Failure
 
-    inline val isSuccess: Boolean
-        get() = data != null
+    val isSuccess: Boolean
+        get() = data is Success<*>
+
+    val isOther: Boolean
+        get() = data is Other<*>
+
+    @Suppress("UNCHECKED_CAST")
+    fun getOrNull(): T? =
+        when (data) {
+            is Success<*> -> data.data as T
+            else -> null
+        }
+
+    fun exceptionOrNull(): Throwable? =
+        when (data) {
+            is Failure -> data.exception
+            else -> null
+        }
+
+    fun otherOrNull(): Any? =
+        when (data) {
+            is Other<*> -> data.data
+            else -> null
+        }
+
+    fun <R> swap(): UiState<R> {
+        if (isSuccess) throw RuntimeException("UiState.Success can't swap")
+        return UiState(data)
+    }
 
     companion object {
+
         fun <T> loading(): UiState<T> {
-            return UiState(
-                loadingState = UiLoadingState.Loading.toCombined(),
-                data = null,
-            )
+            return UiState(Loading)
         }
 
         fun <T> success(data: T): UiState<T> {
-            return UiState(
-                loadingState = UiLoadingState.NotLoading.toCombined(),
-                data = data,
-            )
+            return UiState(Success(data))
         }
 
         fun <T> failure(error: Throwable): UiState<T> {
-            return UiState(
-                loadingState = UiLoadingState.Error(error).toCombined(),
-                data = null,
-            )
+            return UiState(Failure(error))
+        }
+
+        fun <T> other(data: Any?): UiState<T> {
+            return UiState(data)
         }
     }
-}
 
+    data object Loading
 
-inline fun <R, T : R> UiState<T>.getOrElse(
-    action: (loadingState: CombinedUiLoadingState) -> R,
-): R {
-    return when {
-        data != null -> data
-        else -> action(loadingState)
+    class Failure(
+        @JvmField
+        val exception: Throwable,
+    ) {
+        override fun equals(other: Any?): Boolean = other is Failure && exception == other.exception
+        override fun hashCode(): Int = exception.hashCode()
+        override fun toString(): String = "Failure($exception)"
+    }
+
+    class Success<out T>(
+        @JvmField
+        val data: T,
+    ) {
+        override fun equals(other: Any?): Boolean = other is Success<*> && data == other.data
+        override fun hashCode(): Int = data.hashCode()
+        override fun toString(): String = "Success($data)"
+    }
+
+    class Other<out T>(
+        @JvmField
+        val data: T,
+    ) {
+        override fun equals(other: Any?): Boolean = other is Other<*> && data == other.data
+        override fun hashCode(): Int = data.hashCode()
+        override fun toString(): String = "Other($data)"
     }
 }
 
-inline fun <R, T> UiState<T>.fold(
-    onSuccess: (data: T) -> R,
-    onOthers: (loadingState: CombinedUiLoadingState) -> R,
-): R {
-    return when {
-        data != null -> onSuccess(data)
-        else -> onOthers(loadingState)
-    }
-}
-
-inline fun <R, T> UiState<T>.map(transform: (data: T) -> R): UiState<R> {
-    return UiState(
-        loadingState = loadingState,
-        data = data?.let(transform),
-    )
-}
-
-inline fun <R, T> UiState<T>.flatMap(transform: (data: T) -> UiState<R>): UiState<R> {
-    return if (data != null) {
-        transform(data)
-    } else {
-        UiState(
-            loadingState = loadingState,
-            data = null,
-        )
-    }
-}
-
-inline fun <T> UiState<T>.onLoading(action: () -> Unit): UiState<T> {
+inline fun <T> UiState<T>.onLoading(action: () -> Unit): UiState<T> = apply {
     if (isLoading) action()
-    return this
 }
 
-inline fun <T> UiState<T>.onFailure(action: (exception: Throwable) -> Unit): UiState<T> {
-    if (isFailure) action((loadingState.refresh as UiLoadingState.Error).error)
-    return this
+inline fun <T> UiState<T>.onFailure(action: (exception: Throwable) -> Unit): UiState<T> = apply {
+    exceptionOrNull()?.let(action)
 }
 
-inline fun <T> UiState<T>.onSuccess(action: (data: T) -> Unit): UiState<T> {
-    if (data != null) action(data)
-    return this
+inline fun <T> UiState<T>.onSuccess(action: (data: T) -> Unit): UiState<T> = apply {
+    getOrNull()?.let(action)
+}
+
+inline fun <T> UiState<T>.onOther(action: (data: Any?) -> Unit): UiState<T> = apply {
+    otherOrNull()?.let(action)
+}
+
+inline fun <R, T : R> UiState<T>.getOrElse(action: (UiState<T>) -> R): R {
+    return getOrNull() ?: action(this)
 }
