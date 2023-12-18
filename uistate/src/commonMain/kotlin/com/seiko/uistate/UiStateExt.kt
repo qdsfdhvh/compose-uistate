@@ -1,10 +1,10 @@
 package com.seiko.uistate
 
-inline fun <R, T : R> Result<T>.toUiState(
-    transform: (data: T) -> R = { it },
+inline fun <R: Any, T : R> Result<T>.toUiState(
+    transform: (data: T) -> UiState<R> = { UiState.success(it) },
 ): UiState<R> {
     return fold(
-        onSuccess = { UiState.success(transform(it)) },
+        onSuccess = { transform(it) },
         onFailure = { UiState.failure(it) },
     )
 }

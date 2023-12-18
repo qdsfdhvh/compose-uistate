@@ -5,7 +5,7 @@ import kotlin.jvm.JvmInline
 
 @JvmInline
 value class UiState<out T> internal constructor(
-    internal val data: Any?,
+    private val data: Any?,
 ) {
     val isLoading: Boolean
         get() = data is Loading

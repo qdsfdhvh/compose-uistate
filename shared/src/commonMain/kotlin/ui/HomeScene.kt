@@ -34,7 +34,6 @@ import api.GitUser
 import api.GithubApi
 import com.seiko.imageloader.rememberImagePainter
 import com.seiko.uistate.UiState
-import com.seiko.uistate.asUiState
 import com.seiko.uistate.getOrElse
 import com.seiko.uistate.onFailure
 import com.seiko.uistate.onLoading
@@ -166,39 +165,28 @@ private fun LazyListScope.UserReposContent(state: UiState<List<GitRepo>>) {
 
 @Composable
 private fun CounterPresenter(): UiState<HomeState> {
-    val gitUser = produceState<Result<GitUser>?>(null) {
+    val gitUser = produceState(UiState.loading()) {
         value = runCatching {
             GithubApi.getUser("qdsfdhvh")
-        }
-    }.asUiState(mapper = {
-        it.toUiState()
-    }).getOrElse {
+        }.toUiState()
+    }.getOrElse {
         return it.swap()
     }
 
-    val followers by produceState<Result<List<GitUser>>?>(null) {
+    val followers by produceState(UiState.loading()) {
         value = runCatching {
             GithubApi.getFollowers(gitUser.followersUrl)
+        }.toUiState {
+            if (it.isEmpty()) UiState.emptyList()
+            else UiState.success(it)
         }
-    }.asUiState(mapper = { result ->
-        result.fold(
-            onSuccess = {
-                if (it.isEmpty()) UiState.emptyList()
-                else UiState.success(it)
-            },
-            onFailure = {
-                UiState.failure(it)
-            }
-        )
-    })
+    }
 
-    val repos by produceState<Result<List<GitRepo>>?>(null) {
+    val repos by produceState(UiState.loading()) {
         value = runCatching {
             GithubApi.getRepos(gitUser.reposUrl)
-        }
-    }.asUiState(
-        mapper = { it.toUiState() }
-    )
+        }.toUiState()
+    }
 
     return UiState.success(
         HomeState(
