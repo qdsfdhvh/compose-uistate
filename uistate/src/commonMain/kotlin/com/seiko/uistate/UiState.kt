@@ -58,7 +58,7 @@ value class UiState<out T> internal constructor(
         }
 
         fun <T> other(data: Any?): UiState<T> {
-            return UiState(data)
+            return UiState(Other(data))
         }
     }
 
