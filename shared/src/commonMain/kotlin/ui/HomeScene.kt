@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -24,7 +25,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,6 +61,11 @@ fun HomeScene() {
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxSize(),
                 ) {
+                    item {
+                        Button(onClick = { data.event(HomeEvent.Refresh) }) {
+                            Text("Refresh")
+                        }
+                    }
                     item {
                         UserInfoCard(data.user)
                     }
@@ -165,10 +175,14 @@ private fun LazyListScope.UserReposContent(state: UiState<List<GitRepo>>) {
 
 @Composable
 private fun CounterPresenter(): UiState<HomeState> {
-    val gitUser = produceState(UiState.loading()) {
-        value = runCatching {
-            FakeGithubService.getUser("qdsfdhvh")
-        }.toUiState()
+    var refreshKey by remember { mutableIntStateOf(0) }
+
+    val gitUser = key(refreshKey) {
+        produceState(UiState.loading()) {
+            value = runCatching {
+                FakeGithubService.getUser("qdsfdhvh")
+            }.toUiState()
+        }
     }.getOrElse {
         return it.swap()
     }
@@ -193,8 +207,13 @@ private fun CounterPresenter(): UiState<HomeState> {
             user = gitUser,
             followers = followers,
             repos = repos,
-            event = {
-
+            event = { event ->
+                when (event) {
+                    HomeEvent.Refresh -> {
+                        println("refresh $refreshKey")
+                        refreshKey++
+                    }
+                }
             }
         )
     )
@@ -208,4 +227,5 @@ private data class HomeState(
 )
 
 private sealed interface HomeEvent {
+    data object Refresh : HomeEvent
 }
