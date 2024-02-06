@@ -29,9 +29,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import api.FakeGithubService
 import api.GitRepo
 import api.GitUser
-import api.GithubApi
 import com.seiko.imageloader.rememberImagePainter
 import com.seiko.uistate.UiState
 import com.seiko.uistate.getOrElse
@@ -167,7 +167,7 @@ private fun LazyListScope.UserReposContent(state: UiState<List<GitRepo>>) {
 private fun CounterPresenter(): UiState<HomeState> {
     val gitUser = produceState(UiState.loading()) {
         value = runCatching {
-            GithubApi.getUser("qdsfdhvh")
+            FakeGithubService.getUser("qdsfdhvh")
         }.toUiState()
     }.getOrElse {
         return it.swap()
@@ -175,7 +175,7 @@ private fun CounterPresenter(): UiState<HomeState> {
 
     val followers by produceState(UiState.loading()) {
         value = runCatching {
-            GithubApi.getFollowers(gitUser.followersUrl)
+            FakeGithubService.getFollowers(gitUser.followersUrl)
         }.toUiState {
             if (it.isEmpty()) UiState.emptyList()
             else UiState.success(it)
@@ -184,7 +184,7 @@ private fun CounterPresenter(): UiState<HomeState> {
 
     val repos by produceState(UiState.loading()) {
         value = runCatching {
-            GithubApi.getRepos(gitUser.reposUrl)
+            FakeGithubService.getRepos(gitUser.reposUrl)
         }.toUiState()
     }
 
